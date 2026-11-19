@@ -20,7 +20,9 @@
 # a site or mirror in the wrong hands can't put code in your browser. Running a newer install.sh
 # by hand replaces that copy.
 # Where things go: on macOS ~/Library/Application Support/Read Free (log in ~/Library/Logs/Read
-# Free, job: a LaunchAgent), on Linux ~/.local/share/read-free (job: a crontab line).
+# Free, job: a LaunchAgent), on Linux ~/.local/share/read-free (job: a crontab line). The copy is
+# "Read Free updater" on macOS, which names the job in System Settings' Login Items (it lists a
+# LaunchAgent by its program's file name), and update.sh on Linux.
 set -eu
 umask 022
 
@@ -54,15 +56,16 @@ case "$(uname -s)" in
     LOGDIR="$HOME/Library/Logs/Read Free"
     LABEL=local.readfree.update
     PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+    SELF="$BASE/Read Free updater"
     ;;
   Linux)
     BASE="${XDG_DATA_HOME:-$HOME/.local/share}/read-free"
     LOGDIR=$BASE
+    SELF="$BASE/update.sh"
     ;;
   *) die "this script is for macOS and Linux" ;;
 esac
 EXT="$BASE/extension"
-SELF="$BASE/update.sh"
 LOG="$LOGDIR/update.log"
 LOCK="$BASE/.update.lock"
 CRON_MARK='# read-free-update'
@@ -204,7 +207,6 @@ schedule() {
   <string>$LABEL</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/bin/sh</string>
     <string>$(xml "$SELF")</string>
     <string>update</string>
   </array>
@@ -225,8 +227,8 @@ EOF
       launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
       launchctl bootstrap "gui/$(id -u)" "$PLIST" || die "launchctl couldn't load $PLIST"
       say "checks for updates at login and every hour (LaunchAgent $LABEL; log: $LOG)"
-      # What macOS lists for a LaunchAgent that runs /bin/sh (sfltool dumpbtm: "Name: sh")
-      say "macOS may say a background item was added: that's this check, which System Settings lists under Login Items as sh"
+      # macOS names the job after the program it runs, this copy (sfltool dumpbtm: "Name: Read Free updater")
+      say "macOS may say a background item was added: that's this check, which System Settings lists under Login Items as $(basename "$SELF")"
       ;;
     Linux)
       if ! command -v crontab >/dev/null 2>&1; then
@@ -250,10 +252,17 @@ install() {
   copied=''
   if [ "$(cd "$(dirname "$0")" && pwd)/$(basename "$0")" != "$SELF" ]; then
     cp "$0" "$SELF.tmp"
+    chmod 755 "$SELF.tmp"
     mv "$SELF.tmp" "$SELF"
     copied=1
   fi
-  [ "${1:-}" = --no-schedule ] || schedule
+  # The LaunchAgent runs the copy itself, so it must be executable (it starts with #!/bin/sh)
+  chmod 755 "$SELF"
+  if [ "${1:-}" != --no-schedule ]; then
+    schedule
+    # An older script kept its copy as update.sh on macOS too; the LaunchAgent now runs this one
+    if [ "$SELF" != "$BASE/update.sh" ]; then rm -f "$BASE/update.sh"; fi
+  fi
   version=$(installed)
   echo
   echo "Read Free $version is in:"
@@ -271,7 +280,7 @@ install() {
   echo "  sh '$SELF' status"
   echo "  sh '$SELF' uninstall"
   # The copy that was run (curl -O leaves it where the command was pasted) isn't needed again
-  if [ -n "$copied" ]; then echo "You can delete $0: Read Free keeps its own copy, update.sh."; fi
+  if [ -n "$copied" ]; then echo "You can delete $0: Read Free keeps its own copy, called $(basename "$SELF")."; fi
 }
 
 status() {
