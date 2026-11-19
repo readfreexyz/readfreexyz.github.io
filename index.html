@@ -6,7 +6,9 @@
      outlets are the extension's live sites (test/website.test.js checks). The script only makes
      the install command use the address it's served from (so a mirror installs from itself) and
      adds a Copy button; without it the page is complete. Its hash is in the CSP: after changing
-     it, npm test says the new one. -->
+     it, npm test says the new one.
+     The og: and twitter: tags are for apps that show a preview of a shared link: the page itself
+     never loads og.png (website/og.png, drawn from brand/og.svg). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -15,6 +17,16 @@
   <meta name="referrer" content="no-referrer">
   <title>Read Free</title>
   <meta name="description" content="A Chrome extension that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Read Free">
+  <meta property="og:title" content="Read Free">
+  <meta property="og:description" content="A Chrome extension that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
+  <meta property="og:url" content="https://readfree.xyz/">
+  <meta property="og:image" content="https://readfree.xyz/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Read Free's watermelon slice, with the words: Read the news without supporting genocide.">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22%3E%3Cpath d=%22M64.00 6.00L0.82 103.29A116 116 0 0 0 127.18 103.29Z%22 fill=%22%230b6b34%22/%3E%3Cpath d=%22M64.00 6.00L5.18 96.58A108 108 0 0 0 122.82 96.58Z%22 fill=%22%23f4f1e6%22/%3E%3Cpath d=%22M64.00 6.00L8.99 90.71A101 101 0 0 0 119.01 90.71Z%22 fill=%22%23d6283a%22/%3E%3Cg fill=%22%23141414%22%3E%3Cellipse cx=%2256%22 cy=%2252%22 rx=%223.2%22 ry=%225.6%22 transform=%22rotate(170.1 56 52)%22/%3E%3Cellipse cx=%2272%22 cy=%2252%22 rx=%223.2%22 ry=%225.6%22 transform=%22rotate(-170.1 72 52)%22/%3E%3Cellipse cx=%2246%22 cy=%2276%22 rx=%223.4%22 ry=%226%22 transform=%22rotate(165.6 46 76)%22/%3E%3Cellipse cx=%2264%22 cy=%2280%22 rx=%223.4%22 ry=%226%22 transform=%22rotate(-180.0 64 80)%22/%3E%3Cellipse cx=%2282%22 cy=%2276%22 rx=%223.4%22 ry=%226%22 transform=%22rotate(-165.6 82 76)%22/%3E%3C/g%3E%3C/svg%3E">
   <style>
     :root {
@@ -81,6 +93,11 @@
     .card p:last-child { margin-bottom: 0; }
     .note { color: var(--muted); font-size: 13.5px; }
 
+    /* On a phone or tablet: Read Free needs a computer. CSS alone, by the kind of pointer, so it
+       shows without the script and not on a narrow window of a computer. */
+    .phone { display: none; margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; background: var(--surface); }
+    @media (hover: none) and (pointer: coarse) { .phone { display: block; } }
+
     /* 1. Two ways to get it, side by side */
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     h3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 16px; font-weight: 700; }
@@ -140,16 +157,19 @@
       </svg>
       <div>
         <h1>Read Free</h1>
-        <p class="lede">A Chrome extension that opens the paywalled articles of news outlets boycotted
-          over their coverage of Israel's genocide in Gaza, so you can read them without paying
-          them. The first time you read each outlet, it tells you why it's boycotted, with the
-          source.</p>
-        <p class="release">Version 0.21.0, released 2026-11-18</p>
+        <p class="lede">An extension for Chrome on a computer. It opens the paywalled articles of news
+          outlets boycotted over their coverage of Israel's genocide in Gaza, so you can read them
+          without paying them. The first time you read each outlet, it tells you why it's
+          boycotted, with the source.</p>
+        <p class="release">Version 0.21.0, released 2026-11-19</p>
       </div>
     </div>
   </header>
 
   <main>
+    <p class="phone"><b>On a phone?</b> Read Free works in Chrome on a computer. Send yourself this
+      page's link and open it there.</p>
+
     <section aria-labelledby="get">
       <h2 id="get"><span class="number">1</span>Get it</h2>
       <div class="ways">
@@ -158,10 +178,12 @@
           <p>Paste this into Terminal. It installs the newest release and checks for a new one
             every hour, and it only installs releases signed with Read Free's key.</p>
           <div class="command"><code id="command">curl -fsSLO https://readfree.xyz/install.sh &amp;&amp; sh install.sh</code><button class="copy" id="copy" type="button" hidden>Copy</button></div>
-          <p class="note">At the end it shows the folder to load in step 2.</p>
+          <p class="note">At the end it shows the folder to load in step 2. On a Mac, macOS may then
+            say a background item was added: that's the hourly check, which System Settings lists
+            under Login Items as <b>sh</b>.</p>
         </div>
         <div class="card">
-          <h3>On any computer <span class="tag by-hand">Updated by hand</span></h3>
+          <h3>On any computer <span class="tag by-hand">Updated manually</span></h3>
           <a class="download" href="read-free-0.21.0.zip"><span>Download Read Free 0.21.0</span> <small>zip, 167 KB</small></a>
           <p>Unzip it, name the folder <b>Read Free</b>, and keep it where it can stay, such as
             Documents: Chrome loads it from there.</p>
@@ -225,11 +247,10 @@
   </main>
 
   <footer>
-    <p>For personal use. It goes against the publishers' terms, and the Chrome Web Store doesn't
-      allow extensions like it, so Read Free is loaded unpacked.</p>
+    <p>For personal use only.</p>
     <p>This page loads nothing from anywhere else and sets no cookies.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>36c9850f32483c8ca5f66d5cdf9a45683546b3806aaf41821bab1dc3fefc431b</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>316296b333d8f026bc05a43134a214ee1eaf9598403b136708cee3bd0eca98b9</code></p>
   </footer>
 
   <script>

@@ -225,6 +225,8 @@ EOF
       launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
       launchctl bootstrap "gui/$(id -u)" "$PLIST" || die "launchctl couldn't load $PLIST"
       say "checks for updates at login and every hour (LaunchAgent $LABEL; log: $LOG)"
+      # What macOS lists for a LaunchAgent that runs /bin/sh (sfltool dumpbtm: "Name: sh")
+      say "macOS may say a background item was added: that's this check, which System Settings lists under Login Items as sh"
       ;;
     Linux)
       if ! command -v crontab >/dev/null 2>&1; then
@@ -245,9 +247,11 @@ install() {
   [ -f "$0" ] && grep -q '^SIGNER=' "$0" 2>/dev/null || die "download this script and run it as a file: curl -fsSLO <the site>/install.sh && sh install.sh"
   mkdir -p "$BASE" "$LOGDIR"
   ( update ) || die "couldn't install: see the lines above"
+  copied=''
   if [ "$(cd "$(dirname "$0")" && pwd)/$(basename "$0")" != "$SELF" ]; then
     cp "$0" "$SELF.tmp"
     mv "$SELF.tmp" "$SELF"
+    copied=1
   fi
   [ "${1:-}" = --no-schedule ] || schedule
   version=$(installed)
@@ -262,6 +266,12 @@ install() {
   if [ "$(uname -s)" = Darwin ] && [ -t 1 ] && printf '%s' "$EXT" | pbcopy 2>/dev/null; then
     echo "     Its path is copied: in that window press Cmd+Shift+G, paste, and press Return."
   fi
+  echo
+  echo "Later, to see how it's doing, or to stop the updates:"
+  echo "  sh '$SELF' status"
+  echo "  sh '$SELF' uninstall"
+  # The copy that was run (curl -O leaves it where the command was pasted) isn't needed again
+  if [ -n "$copied" ]; then echo "You can delete $0: Read Free keeps its own copy, update.sh."; fi
 }
 
 status() {
