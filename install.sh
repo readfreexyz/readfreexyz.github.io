@@ -271,9 +271,22 @@ install() {
   echo "Once, in Chrome (or Edge, Brave, Vivaldi):"
   echo "  1. Open chrome://extensions and turn on Developer mode (top right). Leave it on:"
   echo "     with it off, Chrome turns Read Free off when it updates itself."
-  echo "  2. Click Load unpacked and choose the folder above."
-  if [ "$(uname -s)" = Darwin ] && [ -t 1 ] && printf '%s' "$EXT" | pbcopy 2>/dev/null; then
-    echo "     Its path is copied: in that window press Cmd+Shift+G, paste, and press Return."
+  # On a Mac, with a person at the terminal: Finder opens with the folder selected, to drag onto
+  # chrome://extensions (Chrome loads a folder dropped there once Developer mode is on), and its
+  # path is copied for Load unpacked, whose dialog doesn't show ~/Library by itself.
+  mac=''; [ "$(uname -s)" = Darwin ] && [ -t 1 ] && mac=1
+  copiedPath=''; if [ -n "$mac" ] && printf '%s' "$EXT" | pbcopy 2>/dev/null; then copiedPath=1; fi
+  if [ -n "$mac" ] && open -R "$EXT" 2>/dev/null; then
+    echo "  2. Drag the folder selected in the Finder window that just opened (it's called"
+    echo "     \"$(basename "$EXT")\") onto that page."
+    if [ -n "$copiedPath" ]; then
+      echo "     Or click Load unpacked: its path is copied, so press Cmd+Shift+G, paste, and press Return."
+    fi
+  else
+    echo "  2. Click Load unpacked and choose the folder above."
+    if [ -n "$copiedPath" ]; then
+      echo "     Its path is copied: in that window press Cmd+Shift+G, paste, and press Return."
+    fi
   fi
   echo
   echo "Later, to see how it's doing, or to stop the updates:"

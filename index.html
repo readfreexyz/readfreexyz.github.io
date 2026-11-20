@@ -116,6 +116,24 @@
     /* 2. Chrome's steps */
     .setup { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: setup; }
     .setup li { position: relative; padding-left: 36px; counter-increment: setup; }
+    /* Pictures of Chrome's controls (drawn, light like Chrome's own pages), the step's control ringed */
+    .shot { display: block; width: 100%; max-width: 360px; height: auto; margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff; }
+    .shot .ui-text { font: 500 16px var(--font); fill: #1f1f1f; }
+    .shot .ui-link { font: 600 15px var(--font); fill: #0b57d0; }
+    .shot .ui-field { fill: #e9eef6; }
+    .shot .ui-on { fill: #0b57d0; }
+    .shot .ui-knob { fill: #ffffff; }
+    .shot .ui-button { fill: #ffffff; stroke: #c4c7c5; stroke-width: 1.5; }
+    .shot .ui-icon { fill: #444746; }
+    .shot .dim { opacity: 0.45; }
+    .shot .ring { fill: none; stroke: #d6283a; stroke-width: 3; }
+    .shot .ui-folder { fill: #5aa7ec; }
+    .shot .ui-arrow { fill: none; stroke: #444746; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .shot .ui-page { fill: #f8fafd; stroke: #c4c7c5; stroke-width: 1.5; }
+    .shot .ui-small { font: 600 14px var(--font); fill: #1f1f1f; }
+    .setup .aside { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; }
+    /* Filled in by Read Free itself, when it's installed in this browser */
+    .installed { margin: 16px 0 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 650; }
     .setup li::before { content: counter(setup); position: absolute; top: 1px; left: 0; display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 12px; font-weight: 700; }
 
     /* The outlets */
@@ -161,7 +179,7 @@
           outlets boycotted over their coverage of Israel's genocide in Gaza, so you can read them
           without paying them. The first time you read each outlet, it tells you why it's
           boycotted, with the source.</p>
-        <p class="release">Version 0.22.2, released 2026-11-19</p>
+        <p class="release">Version 0.23.0, released 2026-11-20 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
       </div>
     </div>
   </header>
@@ -184,7 +202,7 @@
         </div>
         <div class="card" id="update">
           <h3>On any computer <span class="tag by-hand">Updated manually</span></h3>
-          <a class="download" href="read-free-0.22.2.zip"><span>Download Read Free 0.22.2</span> <small>zip, 169 KB</small></a>
+          <a class="download" href="read-free-0.23.0.zip"><span>Download Read Free 0.23.0</span> <small>zip, 173 KB</small></a>
           <p>Unzip it, name the folder <b>Read Free</b>, and keep it where it can stay, such as
             Documents: Chrome loads it from there.</p>
           <p class="note">To update, when Read Free says a new version is out (an arrow on its
@@ -201,13 +219,44 @@
       <div class="card">
         <ol class="setup">
           <li>Paste <code class="path">chrome://extensions</code> into the address bar and turn on
-            <b>Developer mode</b>, top right. Leave it on: with it off, Chrome turns Read Free off.</li>
-          <li>Click <b>Load unpacked</b> and choose the folder: the one the install script showed,
-            or your Read Free folder. On a Mac, press Cmd+Shift+G in that window to paste a path
-            (the script copies it for you).</li>
-          <li>Pin <b>Read Free</b> from the puzzle-piece menu, so its button stays in the toolbar.</li>
+            <b>Developer mode</b>, top right. Leave it on: with it off, Chrome turns Read Free off.
+            <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="The Developer mode switch, at the top right of the Extensions page, turned on">
+              <rect class="ui-field" x="-40" y="14" width="150" height="36" rx="18"/>
+              <text class="ui-text" x="148" y="38">Developer mode</text>
+              <rect class="ui-on" x="290" y="21" width="44" height="22" rx="11"/>
+              <circle class="ui-knob" cx="322" cy="32" r="8"/>
+              <rect class="ring" x="136" y="8" width="214" height="48" rx="12"/>
+            </svg></li>
+          <li>Drag the folder onto that page: the one the install script opened in Finder (it's
+            called <b>extension</b>), or your Read Free folder.
+            <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="A folder called extension, dragged onto the Extensions page">
+              <path class="ui-folder" transform="translate(20 15) scale(1.05)" d="M0 6a3 3 0 0 1 3-3h9l4 4h13a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3z"/>
+              <text class="ui-text" x="62" y="38">extension</text>
+              <path class="ui-arrow" d="M150 32h48m-9-8l9 8-9 8"/>
+              <rect class="ui-page" x="214" y="12" width="128" height="40" rx="8"/>
+              <text class="ui-small" x="226" y="37">Extensions</text>
+              <rect class="ring" x="206" y="5" width="144" height="54" rx="12"/>
+            </svg>
+            <span class="aside">Or click <b>Load unpacked</b> and choose it. On a Mac, press Cmd+Shift+G in
+            that window to paste its path (the script copies it for you).</span></li>
+          <li>Read Free's watermelon shows in the toolbar, next to the address bar. If it doesn't,
+            click the puzzle piece there and pin <b>Read Free</b>.
+            <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="Chrome's toolbar: the address bar, then Read Free's watermelon button and the puzzle-piece menu">
+              <rect class="ui-field" x="-40" y="14" width="250" height="36" rx="18"/>
+              <g transform="translate(234 19) scale(0.2)">
+                <path d="M64.00 6.00L0.82 103.29A116 116 0 0 0 127.18 103.29Z" fill="#0b6b34"/>
+                <path d="M64.00 6.00L5.18 96.58A108 108 0 0 0 122.82 96.58Z" fill="#f4f1e6"/>
+                <path d="M64.00 6.00L8.99 90.71A101 101 0 0 0 119.01 90.71Z" fill="#d6283a"/>
+                <g fill="#141414"><ellipse cx="56" cy="52" rx="3.2" ry="5.6"/><ellipse cx="72" cy="52" rx="3.2" ry="5.6"/><ellipse cx="46" cy="76" rx="3.4" ry="6"/><ellipse cx="64" cy="80" rx="3.4" ry="6"/><ellipse cx="82" cy="76" rx="3.4" ry="6"/></g>
+              </g>
+              <g transform="translate(282 20) scale(1)">
+                <path class="ui-icon" d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/>
+              </g>
+              <circle class="ring" cx="247" cy="32" r="22"/>
+            </svg></li>
           <li>Reload any tabs that were already open.</li>
         </ol>
+        <p class="installed" id="installed" hidden></p>
       </div>
     </section>
 
@@ -249,9 +298,10 @@
 
   <footer>
     <p>For personal use only.</p>
+    <p>Read Free is open source: <a href="https://github.com/readfreexyz/read-free">github.com/readfreexyz/read-free</a>.</p>
     <p>This page loads nothing from anywhere else and sets no cookies.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>e613a8510a60baee50dc4379355b504b982a0275090b4a815ef5926dbb404c50</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>c24df279519cbfa82784e44051b71e5c3e79162fd44b65f0332f56edc757bd1f</code></p>
   </footer>
 
   <script>
