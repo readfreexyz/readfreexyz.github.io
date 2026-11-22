@@ -10,7 +10,7 @@
 #   sh install.sh uninstall   stop checking for updates (the folder stays until you delete it)
 #   install --no-schedule     install without the hourly job
 #
-# Then, once, in Chrome (or Edge, Brave, Vivaldi): chrome://extensions, Developer mode on, Load
+# Then, once, in Chrome (or Edge, Brave, Vivaldi, Dia): chrome://extensions, Developer mode on, Load
 # unpacked, and the folder this prints. Leave Developer mode on: with it off, Chrome turns
 # unpacked extensions off when they reload, and Read Free reloads itself after each update.
 #
@@ -268,7 +268,7 @@ install() {
   echo "Read Free $version is in:"
   echo "  $EXT"
   echo
-  echo "Once, in Chrome (or Edge, Brave, Vivaldi):"
+  echo "Once, in Chrome (or Edge, Brave, Vivaldi, Dia):"
   echo "  1. Open chrome://extensions and turn on Developer mode (top right). Leave it on:"
   echo "     with it off, Chrome turns Read Free off when it updates itself."
   # On a Mac, with a person at the terminal: Finder opens with the folder selected, to drag onto

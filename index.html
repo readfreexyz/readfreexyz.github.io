@@ -115,7 +115,7 @@
 
     /* 2. Chrome's steps */
     .setup { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: setup; }
-    .setup li { position: relative; padding-left: 36px; counter-increment: setup; }
+    .setup li { position: relative; min-height: 24px; padding-left: 36px; counter-increment: setup; }
     /* Pictures of Chrome's controls (drawn, light like Chrome's own pages), the step's control ringed */
     .shot { display: block; width: 100%; max-width: 360px; height: auto; margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff; }
     .shot .ui-text { font: 500 16px var(--font); fill: #1f1f1f; }
@@ -131,9 +131,10 @@
     .shot .ui-arrow { fill: none; stroke: #444746; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     .shot .ui-page { fill: #f8fafd; stroke: #c4c7c5; stroke-width: 1.5; }
     .shot .ui-small { font: 600 14px var(--font); fill: #1f1f1f; }
+    .card .browsers { margin: 0 0 14px; }
     .setup .aside { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; }
     /* Filled in by Read Free itself, when it's installed in this browser */
-    .installed { margin: 16px 0 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 650; }
+    .card .installed { margin: 22px 0 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 650; }
     .setup li::before { content: counter(setup); position: absolute; top: 1px; left: 0; display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 12px; font-weight: 700; }
 
     /* The outlets */
@@ -179,7 +180,7 @@
           outlets boycotted over their coverage of Israel's genocide in Gaza, so you can read them
           without paying them. The first time you read each outlet, it tells you why it's
           boycotted, with the source.</p>
-        <p class="release">Version 0.23.0, released 2026-11-20 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
+        <p class="release">Version 0.24.1, released 2026-11-22 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
       </div>
     </div>
   </header>
@@ -202,7 +203,7 @@
         </div>
         <div class="card" id="update">
           <h3>On any computer <span class="tag by-hand">Updated manually</span></h3>
-          <a class="download" href="read-free-0.23.0.zip"><span>Download Read Free 0.23.0</span> <small>zip, 173 KB</small></a>
+          <a class="download" href="read-free-0.24.1.zip"><span>Download Read Free 0.24.1</span> <small>zip, 176 KB</small></a>
           <p>Unzip it, name the folder <b>Read Free</b>, and keep it where it can stay, such as
             Documents: Chrome loads it from there.</p>
           <p class="note">To update, when Read Free says a new version is out (an arrow on its
@@ -217,6 +218,8 @@
     <section aria-labelledby="load">
       <h2 id="load"><span class="number">2</span>Load it in Chrome, once</h2>
       <div class="card">
+        <p class="note browsers">Edge, Brave, Vivaldi and Dia work the same way (in Dia, the page is
+          <code class="path">dia://extensions</code>).</p>
         <ol class="setup">
           <li>Paste <code class="path">chrome://extensions</code> into the address bar and turn on
             <b>Developer mode</b>, top right. Leave it on: with it off, Chrome turns Read Free off.
@@ -301,7 +304,7 @@
     <p>Read Free is open source: <a href="https://github.com/readfreexyz/read-free">github.com/readfreexyz/read-free</a>.</p>
     <p>This page loads nothing from anywhere else and sets no cookies.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>c24df279519cbfa82784e44051b71e5c3e79162fd44b65f0332f56edc757bd1f</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>b06e6d38cbad9451c0a626a1794875761cadd44619121ecf35fbe00872f2d41f</code></p>
   </footer>
 
   <script>
