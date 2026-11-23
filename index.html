@@ -13,7 +13,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-HOOmU80kBsR5YMOdFfrCNg7GTESqIixNe97h+2ktSkY='; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-usMON3cpV3IgtoYn5KbYFS/i9BjW89FsdjtyDJc4Ods='; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Read Free</title>
   <meta name="description" content="A Chrome extension that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
@@ -100,6 +100,7 @@
 
     /* 1. Two ways to get it, side by side */
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .ways .wide { grid-column: 1 / -1; }
     h3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 16px; font-weight: 700; }
     .tag { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 650; }
     .tag.by-hand { background: var(--surface-2); color: var(--muted); }
@@ -180,7 +181,7 @@
           outlets boycotted over their coverage of Israel's genocide in Gaza, so you can read them
           without paying them. The first time you read each outlet, it tells you why it's
           boycotted, with the source.</p>
-        <p class="release">Version 0.24.1, released 2026-11-22 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
+        <p class="release">Version 0.24.1, released 2026-11-23 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
       </div>
     </div>
   </header>
@@ -201,7 +202,16 @@
             say a background item was added: that's the hourly check, which System Settings lists
             under Login Items as <b>Read Free updater</b>.</p>
         </div>
-        <div class="card" id="update">
+        <div class="card">
+          <h3>On Windows <span class="tag">Updates itself</span></h3>
+          <p>Paste this into PowerShell (type PowerShell in the Start menu). It installs the newest
+            release and checks for a new one every hour, and it only installs releases signed with
+            Read Free's key.</p>
+          <div class="command"><code id="command-win">irm https://readfree.xyz/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1</code><button class="copy" id="copy-win" type="button" hidden>Copy</button></div>
+          <p class="note">At the end a window opens with the folder to drag in step 2. Task Scheduler
+            lists the hourly check as <b>Read Free updater</b>.</p>
+        </div>
+        <div class="card wide" id="update">
           <h3>On any computer <span class="tag by-hand">Updated manually</span></h3>
           <a class="download" href="read-free-0.24.1.zip"><span>Download Read Free 0.24.1</span> <small>zip, 176 KB</small></a>
           <p>Unzip it, name the folder <b>Read Free</b>, and keep it where it can stay, such as
@@ -304,29 +314,34 @@
     <p>Read Free is open source: <a href="https://github.com/readfreexyz/read-free">github.com/readfreexyz/read-free</a>.</p>
     <p>This page loads nothing from anywhere else and sets no cookies.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>b06e6d38cbad9451c0a626a1794875761cadd44619121ecf35fbe00872f2d41f</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>ef7e04ff88071a5c2a9c4349f1aa716a67dd3311dfe110b3f72f3d7fffdd03a0</code></p>
   </footer>
 
   <script>
     (() => {
       'use strict';
-      // The command installs from the address this page is served from, so a mirror installs
-      // from itself: only a plain https address, since the command ends up in a shell. Otherwise
+      // The commands install from the address this page is served from, so a mirror installs
+      // from itself: only a plain https address, since a command ends up in a shell. Otherwise
       // the site's own address, written in at release, stays.
-      const code = document.getElementById('command');
+      const commands = [
+        ['command', 'copy', base => `curl -fsSLO ${base}install.sh && sh install.sh`],
+        ['command-win', 'copy-win', base => `irm ${base}install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\\install.ps1`],
+      ];
       const { protocol, host, pathname } = location;
-      if (protocol === 'https:' && /^[a-z0-9.-]+(:[0-9]+)?$/i.test(host) && /^(\/[a-z0-9._~-]+)*\/(index\.html)?$/i.test(pathname)) {
-        code.textContent = `curl -fsSLO https://${host}${pathname.replace(/index\.html$/, '')}install.sh && sh install.sh`;
+      const plain = protocol === 'https:' && /^[a-z0-9.-]+(:[0-9]+)?$/i.test(host) && /^(\/[a-z0-9._~-]+)*\/(index\.html)?$/i.test(pathname);
+      for (const [codeId, copyId, command] of commands) {
+        const code = document.getElementById(codeId);
+        if (plain) code.textContent = command(`https://${host}${pathname.replace(/index\.html$/, '')}`);
+        const copy = document.getElementById(copyId);
+        if (!navigator.clipboard) continue;
+        copy.hidden = false;
+        copy.addEventListener('click', () => {
+          navigator.clipboard.writeText(code.textContent).then(() => {
+            copy.textContent = 'Copied';
+            setTimeout(() => { copy.textContent = 'Copy'; }, 2000);
+          }, () => {});
+        });
       }
-      const copy = document.getElementById('copy');
-      if (!navigator.clipboard) return;
-      copy.hidden = false;
-      copy.addEventListener('click', () => {
-        navigator.clipboard.writeText(code.textContent).then(() => {
-          copy.textContent = 'Copied';
-          setTimeout(() => { copy.textContent = 'Copy'; }, 2000);
-        }, () => {});
-      });
     })();
   </script>
 </body>
