@@ -7,8 +7,9 @@
      says. It isn't in this file. The CSP lets that script run and report to the site it's on,
      and nothing else from outside.) The
      outlets are the extension's live sites (test/website.test.js checks). The script only makes
-     the install command use the address it's served from (so a mirror installs from itself) and
-     adds a Copy button; without it the page is complete. Its hash is in the CSP: after changing
+     the install command use the address it's served from (so a mirror installs from itself),
+     adds a Copy button, and puts the card for the visitor's browser and system first; without it
+     the page is complete. Its hash is in the CSP: after changing
      it, npm test says the new one.
      Parts between "firefox" comments are left out of a release without a Firefox file, and those
      between "chrome-only" comments out of one with it (tools/release.sh; each marker is a line of
@@ -19,7 +20,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-usMON3cpV3IgtoYn5KbYFS/i9BjW89FsdjtyDJc4Ods=' https://static.cloudflareinsights.com/beacon.min.js/; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-/86V3ycPRv9GNQ6NYHJZuF8GxyvoWHMldBCZ/gPh9RQ=' https://static.cloudflareinsights.com/beacon.min.js/; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Read Free</title>
   <meta name="description" content="An extension for Chrome and Firefox that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
@@ -104,7 +105,7 @@
     .phone { display: none; margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; background: var(--surface); }
     @media (hover: none) and (pointer: coarse) { .phone { display: block; } }
 
-    /* 1. The ways to get it: Firefox's across, Chrome's two side by side, by hand across */
+    /* 1. The ways to get it, two by two. The script puts the visitor's own first, across. */
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .ways .wide { grid-column: 1 / -1; }
     h3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 16px; font-weight: 700; }
@@ -201,7 +202,25 @@
     <section aria-labelledby="get">
       <h2 id="get"><span class="number">1</span>Get it</h2>
       <div class="ways">
-        <div class="card wide" id="firefox">
+        <div class="card" id="mac">
+          <h3>In Chrome, on a Mac or Linux <span class="tag">Updates itself</span></h3>
+          <p>Paste this into Terminal. It installs the newest release and checks for a new one
+            every hour, and it only installs releases signed with Read Free's key.</p>
+          <div class="command"><code id="command">curl -fsSLO https://readfree.xyz/install.sh &amp;&amp; sh install.sh</code><button class="copy" id="copy" type="button" hidden>Copy</button></div>
+          <p class="note">At the end it shows the folder to load in step 2. On a Mac, macOS may then
+            say a background item was added: that's the hourly check, which System Settings lists
+            under Login Items as <b>Read Free updater</b>.</p>
+        </div>
+        <div class="card" id="windows">
+          <h3>In Chrome, on Windows <span class="tag">Updates itself</span></h3>
+          <p>Paste this into PowerShell (type PowerShell in the Start menu). It installs the newest
+            release and checks for a new one every hour, and it only installs releases signed with
+            Read Free's key.</p>
+          <div class="command"><code id="command-win">irm https://readfree.xyz/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1</code><button class="copy" id="copy-win" type="button" hidden>Copy</button></div>
+          <p class="note">At the end a window opens with the folder to drag in step 2. Task Scheduler
+            lists the hourly check as <b>Read Free updater</b>.</p>
+        </div>
+        <div class="card" id="firefox">
           <h3>In Firefox <span class="tag">Updates itself</span></h3>
           <a class="download" href="read-free-0.25.0.xpi"><span>Add to Firefox</span> <small>Read Free 0.25.0</small></a>
           <p>Firefox asks whether this site may install an add-on, then shows what Read Free does. It
@@ -211,25 +230,7 @@
             update adds a site, Read Free's button shows a <b>!</b>, and its settings have a button to
             allow it.</p>
         </div>
-        <div class="card">
-          <h3>In Chrome, on a Mac or Linux <span class="tag">Updates itself</span></h3>
-          <p>Paste this into Terminal. It installs the newest release and checks for a new one
-            every hour, and it only installs releases signed with Read Free's key.</p>
-          <div class="command"><code id="command">curl -fsSLO https://readfree.xyz/install.sh &amp;&amp; sh install.sh</code><button class="copy" id="copy" type="button" hidden>Copy</button></div>
-          <p class="note">At the end it shows the folder to load in step 2. On a Mac, macOS may then
-            say a background item was added: that's the hourly check, which System Settings lists
-            under Login Items as <b>Read Free updater</b>.</p>
-        </div>
-        <div class="card">
-          <h3>In Chrome, on Windows <span class="tag">Updates itself</span></h3>
-          <p>Paste this into PowerShell (type PowerShell in the Start menu). It installs the newest
-            release and checks for a new one every hour, and it only installs releases signed with
-            Read Free's key.</p>
-          <div class="command"><code id="command-win">irm https://readfree.xyz/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1</code><button class="copy" id="copy-win" type="button" hidden>Copy</button></div>
-          <p class="note">At the end a window opens with the folder to drag in step 2. Task Scheduler
-            lists the hourly check as <b>Read Free updater</b>.</p>
-        </div>
-        <div class="card wide" id="update">
+        <div class="card" id="update">
           <h3>In Chrome, on any computer <span class="tag by-hand">Updated manually</span></h3>
           <a class="download" href="read-free-0.25.0.zip"><span>Download Read Free 0.25.0</span> <small>zip, 183 KB</small></a>
           <p>Unzip it, name the folder <b>Read Free</b>, and keep it where it can stay, such as
@@ -337,7 +338,7 @@
       says</a> it stores nothing in your browser and doesn't keep your IP address; most ad blockers
       stop it. The page loads nothing else from outside, and the extension has no analytics.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>de4b46169a3cafa86707318a66ffd681ff211d2e3a9bf419d13358dcb4372f82</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>75b8b1fb420aed72b9f04c9ca78cf572449980a3550949e7673d886b4af75303</code></p>
   </footer>
 
   <script>
@@ -364,6 +365,21 @@
             setTimeout(() => { copy.textContent = 'Copy'; }, 2000);
           }, () => {});
         });
+      }
+      // The card for this browser and system goes first, across; the rest follow two by two, and
+      // one left over goes across too. By the user agent, which is enough for an order: every card
+      // stays. On a phone or tablet, or a system without a card of its own, the order stays.
+      const agent = navigator.userAgent;
+      const own = /Android|iPhone|iPad|Mobile|CrOS/.test(agent) ? null
+        : /\bFirefox\//.test(agent) ? 'firefox' : /\bWindows\b/.test(agent) ? 'windows' : /\b(Macintosh|Linux)\b/.test(agent) ? 'mac' : null;
+      const first = own && document.getElementById(own);
+      if (first) {
+        const ways = first.parentNode;
+        first.classList.add('wide');
+        ways.prepend(first);
+        document.getElementById('update').classList.add('wide');
+        const half = [...ways.children].filter(card => !card.classList.contains('wide'));
+        if (half.length % 2) half.at(-1).classList.add('wide');
       }
     })();
   </script>
