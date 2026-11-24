@@ -319,6 +319,37 @@ function Set-Schedule {
   Say "checks for updates at login and every hour (Task Scheduler: $TASK; log: $LogFile)"
 }
 
+# Opens the site's steps in a browser Read Free works in, one with a window open or else one that's
+# installed, and returns its name; '' without one. Not from an administrator's window: a browser
+# started there would have administrator rights.
+function Open-Steps {
+  $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+  if ((New-Object Security.Principal.WindowsPrincipal $identity).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { return '' }
+  $steps = @($RELEASE_URLS -split '\s+' | Where-Object { $_ })[0] + '#load'
+  if ($steps -notmatch '^https://[A-Za-z0-9.-]+(:[0-9]+)?(/[A-Za-z0-9._~-]+)*/#load$') { return '' }
+  $browsers = @(@('chrome', 'Chrome'), @('msedge', 'Edge'), @('brave', 'Brave'), @('vivaldi', 'Vivaldi'))
+  foreach ($how in @('running', 'installed')) {
+    foreach ($pair in $browsers) {
+      $program = $pair[0]
+      # Edge runs in the background without a window, so a process alone doesn't count
+      if ($how -eq 'running' -and -not (Get-Process -Name $program -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 })) { continue }
+      foreach ($hive in @('HKCU:', 'HKLM:')) {
+        # In strict mode a key without a value throws; whatever goes wrong, the next one is tried
+        try {
+          $key = Get-Item -LiteralPath "$hive\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\$program.exe" -ErrorAction SilentlyContinue
+          if (-not $key) { continue }
+          $where = "$($key.GetValue(''))".Trim('"')
+          if (-not $where -or -not (Test-Path -LiteralPath $where)) { continue }
+          Start-Process -FilePath $where -ArgumentList $steps
+          Start-Sleep -Seconds 1 # the Explorer window comes in front
+          return $pair[1]
+        } catch { }
+      }
+    }
+  }
+  return ''
+}
+
 function Install-ReadFree {
   Configured
   # The hourly check needs this script as a file
@@ -338,11 +369,14 @@ function Install-ReadFree {
   Unblock-File -LiteralPath $Self -ErrorAction SilentlyContinue
   if ($Options -notcontains 'no-schedule') { Set-Schedule }
 
-  # Explorer, with the folder selected, to drag onto chrome://extensions; its path copied for
-  # Load unpacked. Not for "no-window" (tests).
+  # The site's steps, with their pictures, then Explorer in front of them with the folder selected,
+  # to drag onto chrome://extensions; its path copied for Load unpacked. Not for "no-window" (tests).
+  # (Chrome won't open chrome://extensions for a program.)
   $shown = $false
   $pasted = $false
+  $browser = ''
   if ($Options -notcontains 'no-window') {
+    try { $browser = Open-Steps } catch { }
     try { Start-Process -FilePath 'explorer.exe' -ArgumentList "/select,$(Q $Ext)"; $shown = $true } catch { }
     try { Set-Clipboard -Value $Ext; $pasted = $true } catch { }
   }
@@ -353,6 +387,7 @@ function Install-ReadFree {
   Write-Host 'Once, in Chrome (or Edge, Brave, Vivaldi, Dia):'
   Write-Host '  1. Open chrome://extensions and turn on Developer mode (top right). Leave it on:'
   Write-Host '     with it off, Chrome turns Read Free off when it updates itself.'
+  if ($browser) { Write-Host "     (These steps, with pictures, just opened in $browser.)" }
   if ($shown) {
     Write-Host '  2. Drag the folder selected in the window that just opened (it''s called "extension")'
     Write-Host '     onto that page.'

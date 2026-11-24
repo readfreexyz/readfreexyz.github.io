@@ -8,8 +8,8 @@
      and nothing else from outside.) The
      outlets are the extension's live sites (test/website.test.js checks). The script only makes
      the install command use the address it's served from (so a mirror installs from itself),
-     adds a Copy button, and puts the card for the visitor's browser and system first; without it
-     the page is complete. Its hash is in the CSP: after changing
+     adds Copy buttons, and puts the cards for other browsers and systems into a closed section;
+     without it the page is complete. Its hash is in the CSP: after changing
      it, npm test says the new one.
      Parts between "firefox" comments are left out of a release without a Firefox file, and those
      between "chrome-only" comments out of one with it (tools/release.sh; each marker is a line of
@@ -20,7 +20,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-/86V3ycPRv9GNQ6NYHJZuF8GxyvoWHMldBCZ/gPh9RQ=' https://static.cloudflareinsights.com/beacon.min.js/; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-w+0EHEh/CuVY1EqyYqY0Xx/R9drca2P4ai0HliPTLEM=' https://static.cloudflareinsights.com/beacon.min.js/; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Read Free</title>
   <meta name="description" content="An extension for Chrome and Firefox that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
@@ -105,9 +105,14 @@
     .phone { display: none; margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; background: var(--surface); }
     @media (hover: none) and (pointer: coarse) { .phone { display: block; } }
 
-    /* 1. The ways to get it, two by two. The script puts the visitor's own first, across. */
+    /* 1. The ways to get it, two by two. The script leaves the visitor's own, across, and puts the
+       others in a closed section (.more). */
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .ways .wide { grid-column: 1 / -1; }
+    .more > summary { width: fit-content; padding: 6px 4px; color: var(--accent); font-weight: 650; cursor: pointer; }
+    .more > summary:hover { color: var(--accent-hover); }
+    .more > .ways { margin-top: 10px; }
+    .more > section { margin-top: 28px; }
     h3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 16px; font-weight: 700; }
     .tag { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 650; }
     .tag.by-hand { background: var(--surface-2); color: var(--muted); }
@@ -115,6 +120,8 @@
     .command code { flex: 1; min-width: 0; padding-top: 3px; font: 13px/1.5 var(--mono); overflow-wrap: anywhere; }
     .copy { flex: none; padding: 4px 12px; border: 1px solid var(--code-line); border-radius: 7px; background: transparent; color: var(--code-text); font: 600 12.5px/1.4 var(--font); cursor: pointer; }
     .copy:hover { border-color: var(--code-text); }
+    .copy.small { margin-left: 6px; padding: 1px 10px; border-color: var(--line); color: var(--accent); vertical-align: baseline; }
+    .copy.small:hover { border-color: var(--accent); }
     .download { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; margin: 14px 0; padding: 11px 20px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; }
     .download:hover { background: var(--accent-hover); color: var(--on-accent); }
     .download span, .download small { white-space: nowrap; }
@@ -224,7 +231,7 @@
           <h3>In Firefox <span class="tag">Updates itself</span></h3>
           <a class="download" href="read-free-0.25.0.xpi"><span>Add to Firefox</span> <small>Read Free 0.25.0</small></a>
           <p>Firefox asks whether this site may install an add-on, then shows what Read Free does. It
-            needs Firefox 140 or later. That's all: step 2 is only for Chrome.</p>
+            needs Firefox 140 or later. That's all<span id="chrome-step">: step 2 is only for Chrome</span>.</p>
           <p class="note">It's signed by Mozilla, and Firefox lists <b>browsing activity</b> because an
             article's address goes to archive.today when its text has to come from there. When an
             update adds a site, Read Free's button shows a <b>!</b>, and its settings have a button to
@@ -250,8 +257,9 @@
         <p class="note browsers">Edge, Brave, Vivaldi and Dia work the same way (in Dia, the page is
           <code class="path">dia://extensions</code>).</p>
         <ol class="setup">
-          <li>Paste <code class="path">chrome://extensions</code> into the address bar and turn on
-            <b>Developer mode</b>, top right. Leave it on: with it off, Chrome turns Read Free off.
+          <li>Paste <code class="path" id="extensions">chrome://extensions</code><button class="copy small" id="copy-ext" type="button" hidden>Copy</button>
+            into the address bar and turn on <b>Developer mode</b>, top right. Leave it on: with it
+            off, Chrome turns Read Free off.
             <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="The Developer mode switch, at the top right of the Extensions page, turned on">
               <rect class="ui-field" x="-40" y="14" width="150" height="36" rx="18"/>
               <text class="ui-text" x="148" y="38">Developer mode</text>
@@ -338,7 +346,7 @@
       says</a> it stores nothing in your browser and doesn't keep your IP address; most ad blockers
       stop it. The page loads nothing else from outside, and the extension has no analytics.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>75b8b1fb420aed72b9f04c9ca78cf572449980a3550949e7673d886b4af75303</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>44eb62d59d791a509445202ed614daaacb2188627454afa13e2ac294d5f8d7af</code></p>
   </footer>
 
   <script>
@@ -350,12 +358,15 @@
       const commands = [
         ['command', 'copy', base => `curl -fsSLO ${base}install.sh && sh install.sh`],
         ['command-win', 'copy-win', base => `irm ${base}install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\\install.ps1`],
+        // Chrome's own page: the same wherever this one is served from (Chrome opens it only when
+        // it's typed or pasted, so it can't be a link)
+        ['extensions', 'copy-ext', null],
       ];
       const { protocol, host, pathname } = location;
       const plain = protocol === 'https:' && /^[a-z0-9.-]+(:[0-9]+)?$/i.test(host) && /^(\/[a-z0-9._~-]+)*\/(index\.html)?$/i.test(pathname);
       for (const [codeId, copyId, command] of commands) {
         const code = document.getElementById(codeId);
-        if (plain) code.textContent = command(`https://${host}${pathname.replace(/index\.html$/, '')}`);
+        if (plain && command) code.textContent = command(`https://${host}${pathname.replace(/index\.html$/, '')}`);
         const copy = document.getElementById(copyId);
         if (!navigator.clipboard) continue;
         copy.hidden = false;
@@ -366,21 +377,49 @@
           }, () => {});
         });
       }
-      // The card for this browser and system goes first, across; the rest follow two by two, and
-      // one left over goes across too. By the user agent, which is enough for an order: every card
-      // stays. On a phone or tablet, or a system without a card of its own, the order stays.
+      // What's for this browser and system is shown, across: its own card, and in Chrome the zip for
+      // any computer. The cards for others go into a closed section below. By the user agent, which
+      // is enough for that: nothing is taken off the page. On a phone or tablet, or a system without
+      // a card of its own, everything stays as it is.
       const agent = navigator.userAgent;
       const own = /Android|iPhone|iPad|Mobile|CrOS/.test(agent) ? null
         : /\bFirefox\//.test(agent) ? 'firefox' : /\bWindows\b/.test(agent) ? 'windows' : /\b(Macintosh|Linux)\b/.test(agent) ? 'mac' : null;
       const first = own && document.getElementById(own);
       if (first) {
         const ways = first.parentNode;
-        first.classList.add('wide');
+        const shown = own === 'firefox' ? [first] : [first, document.getElementById('update')];
+        const others = [...ways.children].filter(card => !shown.includes(card));
+        for (const card of ways.children) card.classList.toggle('wide', shown.includes(card));
+        if (others.length % 2) others.at(-1).classList.add('wide');
+        const more = document.createElement('details');
+        more.className = 'more wide';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Other browsers and systems';
+        const list = document.createElement('div');
+        list.className = 'ways';
+        list.append(...others);
+        more.append(summary, list);
         ways.prepend(first);
-        document.getElementById('update').classList.add('wide');
-        const half = [...ways.children].filter(card => !card.classList.contains('wide'));
-        if (half.length % 2) half.at(-1).classList.add('wide');
+        ways.append(more);
+        // In Firefox there's no step 2: it goes with Chrome's cards, and the line that says Read Free
+        // is installed (the extension writes it) stays with Firefox's
+        if (own === 'firefox') {
+          more.append(document.getElementById('load').closest('section'));
+          first.append(document.getElementById('installed'));
+          document.getElementById('chrome-step').hidden = true;
+          document.querySelector('#get .number').hidden = true;
+        }
       }
+      // A link to a card in that section opens it
+      const reveal = () => {
+        const target = document.getElementById(location.hash.slice(1));
+        if (!target) return;
+        const more = target.closest('details');
+        if (more) more.open = true;
+        target.scrollIntoView?.();
+      };
+      window.addEventListener('hashchange', reveal);
+      reveal();
     })();
   </script>
 </body>

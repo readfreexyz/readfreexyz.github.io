@@ -243,6 +243,23 @@ EOF
   esac
 }
 
+# On a Mac: opens the site's steps in a browser Read Free works in, one that's open or else one
+# that's installed, and says which; fails without one.
+open_steps() {
+  steps="${RELEASE_URLS%% *}#load"
+  for how in running installed; do
+    for app in "Google Chrome" "Microsoft Edge" "Brave Browser" Vivaldi Dia Chromium; do
+      if [ "$how" = running ] && ! pgrep -xq "$app"; then continue; fi
+      if open -a "$app" "$steps" 2>/dev/null; then
+        sleep 1 # the Finder window comes in front
+        echo "$app"
+        return 0
+      fi
+    done
+  done
+  return 1
+}
+
 install() {
   configured
   # The hourly job needs this script as a file
@@ -271,10 +288,14 @@ install() {
   echo "Once, in Chrome (or Edge, Brave, Vivaldi, Dia):"
   echo "  1. Open chrome://extensions and turn on Developer mode (top right). Leave it on:"
   echo "     with it off, Chrome turns Read Free off when it updates itself."
-  # On a Mac, with a person at the terminal: Finder opens with the folder selected, to drag onto
-  # chrome://extensions (Chrome loads a folder dropped there once Developer mode is on), and its
-  # path is copied for Load unpacked, whose dialog doesn't show ~/Library by itself.
+  # On a Mac, with a person at the terminal: the site's steps open, with their pictures, then Finder
+  # in front of them with the folder selected, to drag onto chrome://extensions (Chrome loads a
+  # folder dropped there once Developer mode is on), and its path is copied for Load unpacked, whose
+  # dialog doesn't show ~/Library by itself. (Chrome won't open chrome://extensions for a program.)
   mac=''; [ "$(uname -s)" = Darwin ] && [ -t 1 ] && mac=1
+  if [ -n "$mac" ] && browser=$(open_steps); then
+    echo "     (These steps, with pictures, just opened in $browser.)"
+  fi
   copiedPath=''; if [ -n "$mac" ] && printf '%s' "$EXT" | pbcopy 2>/dev/null; then copiedPath=1; fi
   if [ -n "$mac" ] && open -R "$EXT" 2>/dev/null; then
     echo "  2. Drag the folder selected in the Finder window that just opened (it's called"
