@@ -1,0 +1,18 @@
+{
+  "addons": {
+    "read-free@readfree.xyz": {
+      "updates": [
+        {
+          "version": "0.25.0",
+          "update_link": "https://readfree.xyz/read-free-0.25.0.xpi",
+          "update_hash": "sha256:b0998722237496564615d2e33aa6cd52f440b5e84c4095e1be81af775d3a8d5b",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "140.0"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

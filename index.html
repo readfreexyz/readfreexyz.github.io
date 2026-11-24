@@ -2,25 +2,31 @@
 <!-- The site's front page, where the toolbar menu's "Get it" leads. A template: tools/release.sh
      build fills in the fields in double braces (the release and the site's address) and puts it
      in dist/.
-     It loads nothing from elsewhere: colors from the "solidarity" theme, its marks inlined. The
+     It loads nothing from elsewhere: colors from the "solidarity" theme, its marks inlined. (On
+     readfree.xyz Cloudflare adds its Web Analytics script to what it serves, which the footer
+     says. It isn't in this file. The CSP lets that script run and report to the site it's on,
+     and nothing else from outside.) The
      outlets are the extension's live sites (test/website.test.js checks). The script only makes
      the install command use the address it's served from (so a mirror installs from itself) and
      adds a Copy button; without it the page is complete. Its hash is in the CSP: after changing
      it, npm test says the new one.
+     Parts between "firefox" comments are left out of a release without a Firefox file, and those
+     between "chrome-only" comments out of one with it (tools/release.sh; each marker is a line of
+     its own).
      The og: and twitter: tags are for apps that show a preview of a shared link: the page itself
      never loads og.png (website/og.png, drawn from brand/og.svg). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-usMON3cpV3IgtoYn5KbYFS/i9BjW89FsdjtyDJc4Ods='; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-usMON3cpV3IgtoYn5KbYFS/i9BjW89FsdjtyDJc4Ods=' https://static.cloudflareinsights.com/beacon.min.js/; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Read Free</title>
-  <meta name="description" content="A Chrome extension that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
+  <meta name="description" content="An extension for Chrome and Firefox that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Read Free">
   <meta property="og:title" content="Read Free">
-  <meta property="og:description" content="A Chrome extension that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
+  <meta property="og:description" content="An extension for Chrome and Firefox that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
   <meta property="og:url" content="https://readfree.xyz/">
   <meta property="og:image" content="https://readfree.xyz/og.png">
   <meta property="og:image:width" content="1200">
@@ -98,7 +104,7 @@
     .phone { display: none; margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; background: var(--surface); }
     @media (hover: none) and (pointer: coarse) { .phone { display: block; } }
 
-    /* 1. Two ways to get it, side by side */
+    /* 1. The ways to get it: Firefox's across, Chrome's two side by side, by hand across */
     .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .ways .wide { grid-column: 1 / -1; }
     h3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 16px; font-weight: 700; }
@@ -178,23 +184,35 @@
       <div>
         <h1>Read Free</h1>
         <p class="lede">Read the news outlets boycotted over their coverage of Israel's genocide in
-          Gaza, without paying them a cent. Read Free is a Chrome extension for your computer that
-          gets you past their paywalls. The first time you read each one, it tells you why it's
+          Gaza, without paying them a cent. Read Free is
+          an extension for Chrome and Firefox on your computer
+          that gets you past their paywalls. The first time you read each one, it tells you why it's
           boycotted and links to the source.</p>
-        <p class="release">Version 0.24.1, released 2026-11-24 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
+        <p class="release">Version 0.25.0, released 2026-11-24 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
       </div>
     </div>
   </header>
 
   <main>
-    <p class="phone"><b>On a phone?</b> Read Free works in Chrome on a computer. Send yourself this
-      page's link and open it there.</p>
+    <p class="phone"><b>On a phone?</b> Read Free works in
+      Chrome or Firefox
+      on a computer. Send yourself this page's link and open it there.</p>
 
     <section aria-labelledby="get">
       <h2 id="get"><span class="number">1</span>Get it</h2>
       <div class="ways">
+        <div class="card wide" id="firefox">
+          <h3>In Firefox <span class="tag">Updates itself</span></h3>
+          <a class="download" href="read-free-0.25.0.xpi"><span>Add to Firefox</span> <small>Read Free 0.25.0</small></a>
+          <p>Firefox asks whether this site may install an add-on, then shows what Read Free does. It
+            needs Firefox 140 or later. That's all: step 2 is only for Chrome.</p>
+          <p class="note">It's signed by Mozilla, and Firefox lists <b>browsing activity</b> because an
+            article's address goes to archive.today when its text has to come from there. When an
+            update adds a site, Read Free's button shows a <b>!</b>, and its settings have a button to
+            allow it.</p>
+        </div>
         <div class="card">
-          <h3>On a Mac or Linux <span class="tag">Updates itself</span></h3>
+          <h3>In Chrome, on a Mac or Linux <span class="tag">Updates itself</span></h3>
           <p>Paste this into Terminal. It installs the newest release and checks for a new one
             every hour, and it only installs releases signed with Read Free's key.</p>
           <div class="command"><code id="command">curl -fsSLO https://readfree.xyz/install.sh &amp;&amp; sh install.sh</code><button class="copy" id="copy" type="button" hidden>Copy</button></div>
@@ -203,7 +221,7 @@
             under Login Items as <b>Read Free updater</b>.</p>
         </div>
         <div class="card">
-          <h3>On Windows <span class="tag">Updates itself</span></h3>
+          <h3>In Chrome, on Windows <span class="tag">Updates itself</span></h3>
           <p>Paste this into PowerShell (type PowerShell in the Start menu). It installs the newest
             release and checks for a new one every hour, and it only installs releases signed with
             Read Free's key.</p>
@@ -212,8 +230,8 @@
             lists the hourly check as <b>Read Free updater</b>.</p>
         </div>
         <div class="card wide" id="update">
-          <h3>On any computer <span class="tag by-hand">Updated manually</span></h3>
-          <a class="download" href="read-free-0.24.1.zip"><span>Download Read Free 0.24.1</span> <small>zip, 176 KB</small></a>
+          <h3>In Chrome, on any computer <span class="tag by-hand">Updated manually</span></h3>
+          <a class="download" href="read-free-0.25.0.zip"><span>Download Read Free 0.25.0</span> <small>zip, 183 KB</small></a>
           <p>Unzip it, name the folder <b>Read Free</b>, and keep it where it can stay, such as
             Documents: Chrome loads it from there.</p>
           <p class="note">To update, when Read Free says a new version is out (an arrow on its
@@ -313,9 +331,13 @@
   <footer>
     <p>For personal use only.</p>
     <p>Read Free is open source: <a href="https://github.com/readfreexyz/read-free">github.com/readfreexyz/read-free</a>.</p>
-    <p>This page loads nothing from anywhere else and sets no cookies.</p>
+    <p>This page sets no cookies. On readfree.xyz its host, Cloudflare, adds a script that counts
+      visits by country, browser, device and the page that linked here, and measures how fast the
+      page loads. <a href="https://developers.cloudflare.com/speed/observatory/rum-beacon/">Cloudflare
+      says</a> it stores nothing in your browser and doesn't keep your IP address; most ad blockers
+      stop it. The page loads nothing else from outside, and the extension has no analytics.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>a8bd5930fa669d7f23b660af7cbc4f31cb4b2d80c430e9ce8bd0aabdd524c3ce</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>de4b46169a3cafa86707318a66ffd681ff211d2e3a9bf419d13358dcb4372f82</code></p>
   </footer>
 
   <script>
