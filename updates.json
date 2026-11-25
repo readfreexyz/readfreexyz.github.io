@@ -3,9 +3,9 @@
     "read-free@readfree.xyz": {
       "updates": [
         {
-          "version": "0.26.1",
-          "update_link": "https://readfree.xyz/read-free-0.26.1.xpi",
-          "update_hash": "sha256:ae1769f449140bd7b0dfe76291d61d12d9868691ed43d5f4a15e8610c4dc2fb4",
+          "version": "0.26.2",
+          "update_link": "https://readfree.xyz/read-free-0.26.2.xpi",
+          "update_hash": "sha256:59b07254f5b152e70e9722c7137df6b4ddd76aaa7d71bf6b1280ed8631eeb9a3",
           "applications": {
             "gecko": {
               "strict_min_version": "140.0"
