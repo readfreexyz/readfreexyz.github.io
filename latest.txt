@@ -1,6 +1,6 @@
 read-free-release 1
-version=0.25.0
-zip=read-free-0.25.0.zip
-sha256=44eb62d59d791a509445202ed614daaacb2188627454afa13e2ac294d5f8d7af
-size=187018
-date=2026-11-24T11:24:59Z
+version=0.26.0
+zip=read-free-0.26.0.zip
+sha256=344dea809be0bac41298b5046eb07de35a6864de74fd2c2aebe7137ca48e0149
+size=195563
+date=2026-11-25T03:56:33Z

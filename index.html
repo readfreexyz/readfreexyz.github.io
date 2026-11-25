@@ -6,10 +6,11 @@
      readfree.xyz Cloudflare adds its Web Analytics script to what it serves, which the footer
      says. It isn't in this file. The CSP lets that script run and report to the site it's on,
      and nothing else from outside.) The
-     outlets are the extension's live sites (test/website.test.js checks). The script only makes
-     the install command use the address it's served from (so a mirror installs from itself),
-     adds Copy buttons, and puts the cards for other browsers and systems into a closed section;
-     without it the page is complete. Its hash is in the CSP: after changing
+     outlets are the extension's live sites (test/website.test.js checks). The visitor picks their
+     browser and computer, and one of two ways to get it; only those steps show, by CSS alone. The
+     script only makes the install command use the address it's served from (so a mirror installs
+     from itself), adds Copy buttons, and picks the visitor's browser and computer for them; without
+     it the page is complete. Its hash is in the CSP: after changing
      it, npm test says the new one.
      Parts between "firefox" comments are left out of a release without a Firefox file, and those
      between "chrome-only" comments out of one with it (tools/release.sh; each marker is a line of
@@ -20,7 +21,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-w+0EHEh/CuVY1EqyYqY0Xx/R9drca2P4ai0HliPTLEM=' https://static.cloudflareinsights.com/beacon.min.js/; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'sha256-lkwDfQLAkgE0mYiBipVUcU/5Fp11BiJk1mS1pCphgNI=' https://static.cloudflareinsights.com/beacon.min.js/; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Read Free</title>
   <meta name="description" content="An extension for Chrome and Firefox that opens the paywalled articles of news outlets boycotted over their coverage of Israel's genocide in Gaza.">
@@ -100,37 +101,83 @@
     .card p:last-child { margin-bottom: 0; }
     .note { color: var(--muted); font-size: 13.5px; }
 
-    /* On a phone or tablet: Read Free needs a computer. CSS alone, by the kind of pointer, so it
-       shows without the script and not on a narrow window of a computer. */
-    .phone { display: none; margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; background: var(--surface); }
+    /* What isn't for a computer running Chrome or Firefox: a phone or tablet (by CSS alone, from the
+       kind of pointer, so it shows without the script and not on a narrow window of a computer), and
+       Safari (by the script). */
+    .phone, .notice { margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; background: var(--surface); }
+    .phone { display: none; }
     @media (hover: none) and (pointer: coarse) { .phone { display: block; } }
 
-    /* 1. The ways to get it, two by two. The script leaves the visitor's own, across, and puts the
-       others in a closed section (.more). */
-    .ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-    .ways .wide { grid-column: 1 / -1; }
-    .more > summary { width: fit-content; padding: 6px 4px; color: var(--accent); font-weight: 650; cursor: pointer; }
-    .more > summary:hover { color: var(--accent-hover); }
-    .more > .ways { margin-top: 10px; }
-    .more > section { margin-top: 28px; }
-    h3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0 0 10px; font-size: 16px; font-weight: 700; }
-    .tag { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 650; }
-    .tag.by-hand { background: var(--surface-2); color: var(--muted); }
-    .command { display: flex; align-items: flex-start; gap: 10px; margin: 14px 0; padding: 12px 12px 12px 14px; border: 1px solid transparent; border-radius: 10px; background: var(--code-bg); color: var(--code-text); }
+    /* What's shown: the steps for the browser and computer picked (data-for) and, in Chrome, for the
+       way picked (data-way). By CSS alone, so it works without the script, which only picks the
+       visitor's own. A Chromebook has one way. A browser without :has() shows everything, each way
+       under a heading (.all). */
+    @supports selector(:has(a)) {
+      .all { display: none; }
+      main:has(#mac:checked) [data-for]:not([data-for~="mac"]),
+      main:has(#windows:checked) [data-for]:not([data-for~="windows"]),
+      main:has(#linux:checked) [data-for]:not([data-for~="linux"]),
+      main:has(#chromebook:checked) [data-for]:not([data-for~="chromebook"]),
+      main:has(#firefox:checked) [data-for]:not([data-for~="firefox"]),
+      main:has(#way-line:checked):not(:has(#chromebook:checked)) [data-way="file"],
+      main:has(#way-file:checked) [data-way="line"],
+      main:has(#chromebook:checked) [data-way="line"] { display: none; }
+    }
+    @supports not selector(:has(a)) { .picker, .choice { display: none; } }
+
+    section, h2 { scroll-margin-top: 20px; }
+    fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+    legend { padding: 0; }
+    .picker legend { margin-bottom: 8px; font-weight: 650; }
+    .picker .note { margin: 8px 0 0; }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pills label { position: relative; }
+    .pills input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+    .pills span { display: block; padding: 7px 15px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 14px; }
+    .pills label:hover span { border-color: var(--accent); }
+    .pills input:checked + span { border-color: var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 650; }
+    .pills input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* The two ways, as a choice: one or the other */
+    .choice { margin-bottom: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+    .choice legend { margin-bottom: 10px; font-size: 16px; }
+    .options { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: 10px 14px; }
+    .option { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 2px solid var(--line); border-radius: 12px; cursor: pointer; }
+    .option:hover { border-color: var(--accent); }
+    .option:has(:checked) { border-color: var(--accent); background: var(--accent-soft); }
+    .option:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .option input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
+    .option input:focus-visible { outline: none; }
+    .option b { font-size: 16px; }
+    .option small { display: block; margin-top: 2px; font-size: 13.5px; }
+    .or { display: grid; place-items: center; align-self: center; width: 38px; height: 38px; border: 2px solid var(--line); border-radius: 50%; font-weight: 750; }
+    h3 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
+    .tag { margin-left: 4px; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 650; white-space: nowrap; }
+
+    .command { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0 6px; padding: 12px 12px 12px 14px; border: 1px solid transparent; border-radius: 10px; background: var(--code-bg); color: var(--code-text); }
     .command code { flex: 1; min-width: 0; padding-top: 3px; font: 13px/1.5 var(--mono); overflow-wrap: anywhere; }
     .copy { flex: none; padding: 4px 12px; border: 1px solid var(--code-line); border-radius: 7px; background: transparent; color: var(--code-text); font: 600 12.5px/1.4 var(--font); cursor: pointer; }
     .copy:hover { border-color: var(--code-text); }
     .copy.small { margin-left: 6px; padding: 1px 10px; border-color: var(--line); color: var(--accent); vertical-align: baseline; }
     .copy.small:hover { border-color: var(--accent); }
-    .download { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; margin: 14px 0; padding: 11px 20px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; }
+    .download { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; padding: 11px 20px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; }
     .download:hover { background: var(--accent-hover); color: var(--on-accent); }
     .download span, .download small { white-space: nowrap; }
     .download small { font-weight: 500; font-size: 12.5px; opacity: 0.85; }
     code.path { padding: 1px 5px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface-2); font: 0.9em var(--mono); overflow-wrap: anywhere; }
+    kbd { padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--surface-2); font: 600 0.87em var(--font); white-space: nowrap; }
+    .more { margin-top: 14px; }
+    .steps .more { margin-top: 8px; font-size: 14px; }
+    .more summary { width: fit-content; color: var(--accent); font-weight: 650; cursor: pointer; }
+    .more summary:hover { color: var(--accent-hover); }
+    .more p, .more .steps { margin: 8px 0 0; }
 
-    /* 2. Chrome's steps */
-    .setup { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: setup; }
-    .setup li { position: relative; min-height: 24px; padding-left: 36px; counter-increment: setup; }
+    .steps { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
+    .steps > li { position: relative; min-height: 24px; padding-left: 36px; counter-increment: step; }
+    .steps > li::before { content: counter(step); position: absolute; top: 1px; left: 0; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 12.5px; font-weight: 750; }
+    .steps > li:has(> .download)::before { top: 11px; }
+    .steps .line { display: block; margin-top: 4px; }
+    .steps .aside { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; }
     /* Pictures of Chrome's controls (drawn, light like Chrome's own pages), the step's control ringed */
     .shot { display: block; width: 100%; max-width: 360px; height: auto; margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff; }
     .shot .ui-text { font: 500 16px var(--font); fill: #1f1f1f; }
@@ -146,11 +193,8 @@
     .shot .ui-arrow { fill: none; stroke: #444746; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     .shot .ui-page { fill: #f8fafd; stroke: #c4c7c5; stroke-width: 1.5; }
     .shot .ui-small { font: 600 14px var(--font); fill: #1f1f1f; }
-    .card .browsers { margin: 0 0 14px; }
-    .setup .aside { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; }
     /* Filled in by Read Free itself, when it's installed in this browser */
-    .card .installed { margin: 22px 0 0; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 650; }
-    .setup li::before { content: counter(setup); position: absolute; top: 1px; left: 0; display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .card .installed { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 650; }
 
     /* The outlets */
     .sites { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0 20px; margin: 0 0 14px; padding: 0; list-style: none; }
@@ -161,7 +205,8 @@
     footer code { font: 12px var(--mono); overflow-wrap: anywhere; }
 
     @media (max-width: 760px) {
-      .ways { grid-template-columns: minmax(0, 1fr); }
+      .options { grid-template-columns: minmax(0, 1fr); }
+      .or { justify-self: center; }
       .top-inner { gap: 14px; padding: 24px 16px; }
       .logo { width: 48px; height: 48px; }
       h1 { font-size: 28px; }
@@ -196,7 +241,7 @@
           an extension for Chrome and Firefox on your computer
           that gets you past their paywalls. The first time you read each one, it tells you why it's
           boycotted and links to the source.</p>
-        <p class="release">Version 0.25.0, released 2026-11-24 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
+        <p class="release">Version 0.26.0, released 2026-11-25 · <a href="https://github.com/readfreexyz/read-free">Open source on GitHub</a></p>
       </div>
     </div>
   </header>
@@ -206,98 +251,247 @@
       Chrome or Firefox
       on a computer. Send yourself this page's link and open it there.</p>
 
-    <section aria-labelledby="get">
-      <h2 id="get"><span class="number">1</span>Get it</h2>
-      <div class="ways">
-        <div class="card" id="mac">
-          <h3>In Chrome, on a Mac or Linux <span class="tag">Updates itself</span></h3>
-          <p>Paste this into Terminal. It installs the newest release and checks for a new one
-            every hour, and it only installs releases signed with Read Free's key.</p>
-          <div class="command"><code id="command">curl -fsSLO https://readfree.xyz/install.sh &amp;&amp; sh install.sh</code><button class="copy" id="copy" type="button" hidden>Copy</button></div>
-          <p class="note">At the end it shows the folder to load in step 2. On a Mac, macOS may then
-            say a background item was added: that's the hourly check, which System Settings lists
-            under Login Items as <b>Read Free updater</b>.</p>
+    <p class="notice" id="safari" hidden><b>You're in Safari.</b> Read Free works in
+      Chrome or Firefox:
+      open this page there, then follow the steps.</p>
+
+    <fieldset class="picker">
+      <legend>I'm using</legend>
+      <div class="pills">
+        <label><input type="radio" name="system" id="mac" checked><span>Chrome on a Mac</span></label>
+        <label><input type="radio" name="system" id="windows"><span>Chrome on Windows</span></label>
+        <label><input type="radio" name="system" id="linux"><span>Chrome on Linux</span></label>
+        <label><input type="radio" name="system" id="chromebook"><span>Chromebook</span></label>
+        <label><input type="radio" name="system" id="firefox"><span>Firefox</span></label>
+      </div>
+      <p class="note">Edge, Brave, Vivaldi or Dia? Pick Chrome: the steps are the same.</p>
+    </fieldset>
+
+    <section aria-labelledby="add" data-for="firefox">
+      <h2 id="add">Add it to Firefox</h2>
+      <div class="card">
+        <ol class="steps">
+          <li><a class="download" href="read-free-0.26.0.xpi"><span>Add to Firefox</span> <small>Read Free 0.26.0</small></a></li>
+          <li>Firefox asks twice. Click <b>Continue to Installation</b>, then <b>Add</b>.</li>
+        </ol>
+        <details class="more">
+          <summary>What Firefox tells you</summary>
+          <p>Read Free is signed by Mozilla. Firefox lists <b>browsing activity</b> because an article's
+            address goes to archive.today when its text has to come from there. It needs Firefox 140 or
+            later.</p>
+          <p>When an update adds a site, Read Free's button shows a <b>!</b>, and its settings have a
+            button to allow it.</p>
+        </details>
+      </div>
+    </section>
+
+    <section aria-labelledby="get" data-for="mac windows linux chromebook">
+      <h2 id="get">First, get Read Free</h2>
+      <div class="card">
+        <fieldset class="choice" data-for="mac windows linux">
+          <legend>There are two ways. <b>Choose one:</b></legend>
+          <div class="options">
+            <label class="option"><input type="radio" name="way" id="way-line" checked>
+              <span><b>Paste one line</b> <span class="tag">Recommended</span>
+                <small>It updates itself. You paste into
+                  <span data-for="mac">Terminal, an app your Mac already has.</span><span data-for="windows">PowerShell, an app Windows already has.</span><span data-for="linux">a terminal.</span></small></span></label>
+            <span class="or">or</span>
+            <label class="option"><input type="radio" name="way" id="way-file">
+              <span><b>Download a file</b>
+                <small>You unzip it, and update it yourself when Read Free says there's a new
+                  version.</small></span></label>
+          </div>
+        </fieldset>
+
+        <div data-way="line">
+          <h3><span class="all">The first way: </span>Paste one line</h3>
+          <ol class="steps">
+            <li data-for="mac linux"><b class="all">On a Mac or Linux: </b>Copy this line.
+              <span class="command"><code id="command">curl -fsSLO https://readfree.xyz/install.sh &amp;&amp; sh install.sh</code><button class="copy" id="copy" type="button" hidden>Copy</button></span></li>
+            <li data-for="windows"><b class="all">On Windows: </b>Copy this line.
+              <span class="command"><code id="command-win">irm https://readfree.xyz/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1</code><button class="copy" id="copy-win" type="button" hidden>Copy</button></span></li>
+            <li data-for="mac"><b class="all">On a Mac: </b>Open Terminal: press <kbd>⌘ Command</kbd> and
+              <kbd>Space</kbd> together, type <b>Terminal</b>, and press <kbd>Return</kbd>.</li>
+            <li data-for="windows"><b class="all">On Windows: </b>Open PowerShell: press the
+              <kbd>Windows</kbd> key, type <b>PowerShell</b>, and press <kbd>Enter</kbd>.</li>
+            <li data-for="linux"><b class="all">On Linux: </b>Open a terminal.</li>
+            <li data-for="mac"><b class="all">On a Mac: </b>In Terminal, press <kbd>⌘ Command</kbd> and
+              <kbd>V</kbd> together to paste the line, then press <kbd>Return</kbd>.
+              <span class="line">Your Mac may warn you first, as it does with anything pasted from a
+                website. To go on, confirm that you want to paste. If you'd rather not, choose
+                <b>Download a file</b> above: it works just as well.</span></li>
+            <li data-for="windows"><b class="all">On Windows: </b>In PowerShell, press <kbd>Ctrl</kbd> and
+              <kbd>V</kbd> together to paste the line, then press <kbd>Enter</kbd>.
+              <span class="line">If you'd rather not, choose <b>Download a file</b> above: it works just
+                as well.</span></li>
+            <li data-for="linux"><b class="all">On Linux: </b>Paste the line there and press
+              <kbd>Enter</kbd>.</li>
+            <li data-for="mac"><b class="all">On a Mac: </b>Wait a few seconds while some text appears. Then
+              a Finder window opens, showing a folder called <b>extension</b>: that's Read Free. Don't
+              open the folder, just leave the window there.
+              <span class="aside">This page may open again too, in a new tab, at the next part. macOS may
+                say that a background item was added: that's how Read Free updates itself.</span></li>
+            <li data-for="windows"><b class="all">On Windows: </b>Wait a few seconds while some text
+              appears. Then a File Explorer window opens, showing a folder called <b>extension</b>: that's
+              Read Free. Don't open the folder, just leave the window there.
+              <span class="aside">This page may open again too, in a new tab, at the next part.</span></li>
+            <li data-for="linux"><b class="all">On Linux: </b>Wait until it shows the folder it put Read
+              Free in.</li>
+          </ol>
+          <details class="more">
+            <summary>What does this line do?</summary>
+            <p>It downloads Read Free's installer and runs it. The installer gets the newest release and
+              puts it in a folder, then checks for a new one every hour. It only installs releases
+              signed with Read Free's key.</p>
+            <p data-for="mac">System Settings lists the hourly check under Login Items, as <b>Read Free
+              updater</b>.</p>
+            <p data-for="windows"><b>-ExecutionPolicy Bypass</b> lets Windows run the installer, for this run:
+              it changes no settings. Task Scheduler lists the hourly check as <b>Read Free updater</b>.</p>
+            <p>You can read it first, on GitHub:
+              <a data-for="mac linux" href="https://github.com/readfreexyz/read-free/blob/main/website/install.sh">install.sh</a><span class="all"> or </span><a data-for="windows" href="https://github.com/readfreexyz/read-free/blob/main/website/install.ps1">install.ps1</a>.</p>
+          </details>
         </div>
-        <div class="card" id="windows">
-          <h3>In Chrome, on Windows <span class="tag">Updates itself</span></h3>
-          <p>Paste this into PowerShell (type PowerShell in the Start menu). It installs the newest
-            release and checks for a new one every hour, and it only installs releases signed with
-            Read Free's key.</p>
-          <div class="command"><code id="command-win">irm https://readfree.xyz/install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1</code><button class="copy" id="copy-win" type="button" hidden>Copy</button></div>
-          <p class="note">At the end a window opens with the folder to drag in step 2. Task Scheduler
-            lists the hourly check as <b>Read Free updater</b>.</p>
-        </div>
-        <div class="card" id="firefox">
-          <h3>In Firefox <span class="tag">Updates itself</span></h3>
-          <a class="download" href="read-free-0.25.0.xpi"><span>Add to Firefox</span> <small>Read Free 0.25.0</small></a>
-          <p>Firefox asks whether this site may install an add-on, then shows what Read Free does. It
-            needs Firefox 140 or later. That's all<span id="chrome-step">: step 2 is only for Chrome</span>.</p>
-          <p class="note">It's signed by Mozilla, and Firefox lists <b>browsing activity</b> because an
-            article's address goes to archive.today when its text has to come from there. When an
-            update adds a site, Read Free's button shows a <b>!</b>, and its settings have a button to
-            allow it.</p>
-        </div>
-        <div class="card" id="update">
-          <h3>In Chrome, on any computer <span class="tag by-hand">Updated manually</span></h3>
-          <a class="download" href="read-free-0.25.0.zip"><span>Download Read Free 0.25.0</span> <small>zip, 183 KB</small></a>
-          <p>Unzip it, name the folder <b>Read Free</b>, and keep it where it can stay, such as
-            Documents: Chrome loads it from there.</p>
-          <p class="note">To update, when Read Free says a new version is out (an arrow on its
-            toolbar button): download it here, unzip it, name it Read Free too, and put it in place
-            of the old folder. Then click
-            the reload arrow on Read Free in <code class="path">chrome://extensions</code>. It's the
-            same folder, so your settings and tally stay.</p>
+
+        <div data-way="file">
+          <h3 data-for="mac windows linux"><span class="all">Or the second way: </span>Download a file</h3>
+          <ol class="steps">
+            <li><a class="download" href="read-free-0.26.0.zip" download="Read Free.zip"><span>Download Read Free 0.26.0</span> <small>zip, 191 KB</small></a></li>
+            <li data-for="mac"><b class="all">On a Mac: </b>Open your <b>Downloads</b> folder and
+              double-click <b>Read Free.zip</b>. A folder called <b>Read Free</b> appears next to it.</li>
+            <li data-for="windows"><b class="all">On Windows: </b>Open your <b>Downloads</b> folder.
+              Right-click <b>Read Free</b> (its icon has a zipper), choose <b>Extract All</b>, then
+              <b>Extract</b>. You get another <b>Read Free</b>, a folder without a zipper.
+              <span class="aside">Double-clicking the one with the zipper only shows what's in it.</span></li>
+            <li data-for="linux"><b class="all">On Linux: </b>Unzip it, into a folder called <b>Read
+              Free</b>.</li>
+            <li data-for="chromebook"><b class="all">On a Chromebook: </b>In the <b>Files</b> app, open
+              <b>Downloads</b>, right-click <b>Read Free.zip</b>, and choose <b>Extract all</b> (or
+              <b>Extract</b>). You get a folder called <b>Read Free</b>.</li>
+            <li data-for="mac windows linux">Move the <b>Read Free</b> folder into <b>Documents</b>, and
+              leave it there.
+              <span class="aside">Chrome uses it from there: Read Free stops working if the folder is
+                moved or deleted later.</span></li>
+            <li data-for="chromebook"><b class="all">On a Chromebook: </b>Move the <b>Read Free</b> folder
+              into <b>My files</b>, and leave it there.
+              <span class="aside">Chrome uses it from there: Read Free stops working if the folder is
+                moved or deleted later.</span></li>
+          </ol>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="load">
-      <h2 id="load"><span class="number">2</span>Load it in Chrome, once</h2>
+    <section aria-labelledby="load" data-for="mac windows linux chromebook">
+      <h2 id="load">Then, add it to Chrome</h2>
       <div class="card">
-        <p class="note browsers">Edge, Brave, Vivaldi and Dia work the same way (in Dia, the page is
-          <code class="path">dia://extensions</code>).</p>
-        <ol class="setup">
-          <li>Paste <code class="path" id="extensions">chrome://extensions</code><button class="copy small" id="copy-ext" type="button" hidden>Copy</button>
-            into the address bar and turn on <b>Developer mode</b>, top right. Leave it on: with it
-            off, Chrome turns Read Free off.
+        <ol class="steps">
+          <li>Copy <code class="path" id="extensions">chrome://extensions</code><button class="copy small" id="copy-ext" type="button" hidden>Copy</button></li>
+          <li>Open a new tab, paste it into the address bar at the top, and press
+            <kbd data-for="mac">Return</kbd><span class="all"> or </span><kbd data-for="windows linux chromebook">Enter</kbd>.
+            That's the Extensions page.
+            <span class="line">Keep this tab too: come back to it for the next steps.</span></li>
+          <li>On the Extensions page, turn on <b>Developer mode</b>, at the top right, and leave it on.
             <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="The Developer mode switch, at the top right of the Extensions page, turned on">
               <rect class="ui-field" x="-40" y="14" width="150" height="36" rx="18"/>
               <text class="ui-text" x="148" y="38">Developer mode</text>
               <rect class="ui-on" x="290" y="21" width="44" height="22" rx="11"/>
               <circle class="ui-knob" cx="322" cy="32" r="8"/>
               <rect class="ring" x="136" y="8" width="214" height="48" rx="12"/>
-            </svg></li>
-          <li>Drag the folder onto that page: the one the install script opened in Finder or
-            File Explorer (it's called <b>extension</b>), or your Read Free folder.
-            <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="A folder called extension, dragged onto the Extensions page">
-              <path class="ui-folder" transform="translate(20 15) scale(1.05)" d="M0 6a3 3 0 0 1 3-3h9l4 4h13a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3z"/>
-              <text class="ui-text" x="62" y="38">extension</text>
-              <path class="ui-arrow" d="M150 32h48m-9-8l9 8-9 8"/>
-              <rect class="ui-page" x="214" y="12" width="128" height="40" rx="8"/>
-              <text class="ui-small" x="226" y="37">Extensions</text>
-              <rect class="ring" x="206" y="5" width="144" height="54" rx="12"/>
             </svg>
-            <span class="aside">Or click <b>Load unpacked</b> and choose it. The script copies its path
-            for you: on a Mac, press Cmd+Shift+G in that window and paste it; on Windows, paste it
-            into the Folder box and click Select Folder.</span></li>
-          <li>Read Free's watermelon shows in the toolbar, next to the address bar. If it doesn't,
-            click the puzzle piece there and pin <b>Read Free</b>.
-            <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="Chrome's toolbar: the address bar, then Read Free's watermelon button and the puzzle-piece menu">
-              <rect class="ui-field" x="-40" y="14" width="250" height="36" rx="18"/>
-              <g transform="translate(234 19) scale(0.2)">
-                <path d="M64.00 6.00L0.82 103.29A116 116 0 0 0 127.18 103.29Z" fill="#0b6b34"/>
-                <path d="M64.00 6.00L5.18 96.58A108 108 0 0 0 122.82 96.58Z" fill="#f4f1e6"/>
-                <path d="M64.00 6.00L8.99 90.71A101 101 0 0 0 119.01 90.71Z" fill="#d6283a"/>
-                <g fill="#141414"><ellipse cx="56" cy="52" rx="3.2" ry="5.6"/><ellipse cx="72" cy="52" rx="3.2" ry="5.6"/><ellipse cx="46" cy="76" rx="3.4" ry="6"/><ellipse cx="64" cy="80" rx="3.4" ry="6"/><ellipse cx="82" cy="76" rx="3.4" ry="6"/></g>
+            <span class="aside">It's Chrome's own switch, for adding an extension from a folder. With it
+              off, Chrome turns Read Free off.</span></li>
+          <li data-for="mac windows" data-way="line"><b class="all">If you pasted the line: </b>Go to the Extensions page. Then bring back the
+            window with the <b>extension</b> folder: click
+            <span data-for="mac"><b>Finder</b> in the Dock</span><span class="all"> or </span><span data-for="windows"><b>File Explorer</b> in the taskbar</span>.
+            Drag the folder onto the Extensions page, anywhere on it.
+            <svg class="shot" viewBox="0 0 360 132" role="img" aria-label="The folder called extension, in its window in front, dragged onto the Extensions page behind it">
+              <rect class="ui-page" x="96" y="10" width="254" height="112" rx="8"/>
+              <path class="ui-field" d="M96 34V18a8 8 0 0 1 8-8h238a8 8 0 0 1 8 8v16z"/>
+              <text class="ui-small" x="108" y="27">Extensions</text>
+              <rect class="ui-on" x="312" y="15" width="28" height="14" rx="7"/>
+              <circle class="ui-knob" cx="333" cy="22" r="5"/>
+              <rect class="ui-page" x="10" y="46" width="128" height="76" rx="8"/>
+              <path class="ui-field" d="M10 64v-10a8 8 0 0 1 8-8h112a8 8 0 0 1 8 8v10z"/>
+              <path class="ui-folder" transform="translate(24 78)" d="M0 6a3 3 0 0 1 3-3h9l4 4h13a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3z"/>
+              <text class="ui-small" x="64" y="98">extension</text>
+              <path class="ui-arrow" d="M146 94h46m-9-8l9 8-9 8"/>
+              <path class="ui-folder dim" transform="translate(208 78)" d="M0 6a3 3 0 0 1 3-3h9l4 4h13a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3z"/>
+              <text class="ui-small" x="248" y="98">anywhere</text>
+              <rect class="ring" x="198" y="62" width="142" height="50" rx="12"/>
+            </svg>
+            <details class="more">
+              <summary>Can't find the folder, or can't drag it?</summary>
+              <p>Copy this:
+                <span data-for="mac"><code class="path" id="path-mac">~/Library/Application Support/Read Free/extension</code><button class="copy small" id="copy-path-mac" type="button" hidden>Copy</button></span><span class="all"> or </span><span data-for="windows"><code class="path" id="path-win">%LOCALAPPDATA%\Read Free</code><button class="copy small" id="copy-path-win" type="button" hidden>Copy</button></span></p>
+              <p data-for="mac">Then, on the Extensions page, click <b>Load unpacked</b>. In the window that
+                opens, press <kbd>⌘ Command</kbd>, <kbd>Shift</kbd> and <kbd>G</kbd> together, paste, press
+                <kbd>Return</kbd>, and choose the folder.</p>
+              <p data-for="windows">Then, on the Extensions page, click <b>Load unpacked</b>. In the window
+                that opens, click the bar at the top that shows where you are, paste, and press
+                <kbd>Enter</kbd>. Click the <b>extension</b> folder once, then <b>Select Folder</b>.</p>
+            </details></li>
+          <li data-for="linux" data-way="line"><b class="all">If you pasted the line, on Linux: </b>Copy this, the folder Read Free
+            is in:
+            <code class="path" id="path-linux">~/.local/share/read-free/extension</code><button class="copy small" id="copy-path-linux" type="button" hidden>Copy</button>.
+            On the Extensions page, click <b>Load unpacked</b>, press <kbd>Ctrl</kbd> and <kbd>L</kbd>
+            together in the window that opens (in most of them), paste, and choose the folder.</li>
+          <li data-way="file"><b class="all">Or, if you downloaded the file: </b>On the Extensions page, click <b>Load unpacked</b>, at the top left. Choose
+            the <b>Read Free</b> folder in
+            <span data-for="mac windows linux"><b>Documents</b></span><span class="all"> or </span><span data-for="chromebook"><b>My files</b></span><span data-for="windows">: click it once, then click <b>Select Folder</b></span>.
+            <svg class="shot" viewBox="0 0 360 64" role="img" aria-label="The Load unpacked button, at the top left of the Extensions page">
+              <rect class="ui-button" x="18" y="14" width="126" height="36" rx="18"/>
+              <text class="ui-small" x="33" y="37">Load unpacked</text>
+              <g class="dim">
+                <rect class="ui-button" x="160" y="14" width="126" height="36" rx="18"/>
+                <text class="ui-small" x="176" y="37">Pack extension</text>
+                <rect class="ui-button" x="302" y="14" width="126" height="36" rx="18"/>
+                <text class="ui-small" x="318" y="37">Update</text>
               </g>
-              <g transform="translate(282 20) scale(1)">
-                <path class="ui-icon" d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/>
-              </g>
-              <circle class="ring" cx="247" cy="32" r="22"/>
-            </svg></li>
-          <li>Reload any tabs that were already open.</li>
+              <rect class="ring" x="10" y="7" width="142" height="50" rx="16"/>
+            </svg>
+            <details class="more">
+              <summary>It says the manifest is missing?</summary>
+              <p>Then it's the wrong folder. Choose the <b>Read Free</b> folder that has a file called
+                <b>manifest</b> in it. It may be inside the one you chose.</p>
+            </details></li>
         </ol>
+        <details class="more" data-for="mac windows linux">
+          <summary>Using Edge, Brave, Vivaldi or Dia?</summary>
+          <p>The same steps work. The switch and the buttons may be somewhere else on the page, and in Dia
+            the page is <code class="path">dia://extensions</code>.</p>
+        </details>
+      </div>
+    </section>
+
+    <section aria-labelledby="done">
+      <h2 id="done"><span class="number">✓</span>That's it</h2>
+      <div class="card">
         <p class="installed" id="installed" hidden></p>
+        <p>A tab opens by itself, saying <b>Read Free is on</b>. Reload any news tabs that were already
+          open.</p>
+        <p class="note">Read Free's button is the watermelon next to the address bar. If you don't see
+          it, click the puzzle piece there and pin <b>Read Free</b>.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="updates" id="update">
+      <h2 id="updates">Later: updates</h2>
+      <div class="card">
+        <p data-for="mac windows linux"><b>If you pasted the line,</b> there's nothing to do: Read Free
+          updates itself.</p>
+        <p data-for="mac windows linux chromebook"><b>If you downloaded the file,</b> Read Free's button
+          shows an arrow when a new version is out.</p>
+        <details class="more" data-for="mac windows linux chromebook">
+          <summary>How to update it then</summary>
+          <ol class="steps">
+            <li><a href="read-free-0.26.0.zip" download="Read Free.zip">Download Read Free 0.26.0</a> and unzip it.</li>
+            <li>Delete the old <b>Read Free</b> folder from where you keep it. Move the new one there, and
+              give it the same name.</li>
+            <li>Go to <code class="path">chrome://extensions</code> and click the reload arrow on Read
+              Free. Your settings and tally stay.</li>
+          </ol>
+        </details>
+        <p data-for="firefox"><b class="all">In Firefox: </b>There's nothing to do: Firefox updates Read
+          Free by itself.</p>
       </div>
     </section>
 
@@ -315,7 +509,9 @@
           <li>El Mundo</li>
           <li>Financial Times</li>
           <li>The Globe and Mail</li>
+          <li>Haaretz</li>
           <li>The Independent</li>
+          <li>The Jerusalem Post</li>
           <li>La Libre Belgique</li>
           <li>Le Monde</li>
           <li>Los Angeles Times</li>
@@ -330,6 +526,7 @@
           <li>Toronto Star</li>
           <li>USA Today</li>
           <li>The Wall Street Journal</li>
+          <li>Ynet</li>
         </ul>
         <p class="note">Where a wall only covers text that's already on the page, Read Free takes the
           wall off. Otherwise it shows the newest archive.today snapshot of the article.</p>
@@ -346,7 +543,7 @@
       says</a> it stores nothing in your browser and doesn't keep your IP address; most ad blockers
       stop it. The page loads nothing else from outside, and the extension has no analytics.</p>
     <p>This release: <a href="latest.txt">latest.txt</a>, signed in
-      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>44eb62d59d791a509445202ed614daaacb2188627454afa13e2ac294d5f8d7af</code></p>
+      <a href="latest.txt.sig">latest.txt.sig</a>. The zip's SHA-256: <code>344dea809be0bac41298b5046eb07de35a6864de74fd2c2aebe7137ca48e0149</code></p>
   </footer>
 
   <script>
@@ -358,9 +555,12 @@
       const commands = [
         ['command', 'copy', base => `curl -fsSLO ${base}install.sh && sh install.sh`],
         ['command-win', 'copy-win', base => `irm ${base}install.ps1 -OutFile install.ps1; powershell -NoProfile -ExecutionPolicy Bypass -File .\\install.ps1`],
-        // Chrome's own page: the same wherever this one is served from (Chrome opens it only when
-        // it's typed or pasted, so it can't be a link)
+        // The same wherever this page is served from: Chrome's own page (Chrome opens it only when
+        // it's typed or pasted, so it can't be a link), and where the installers put Read Free
         ['extensions', 'copy-ext', null],
+        ['path-mac', 'copy-path-mac', null],
+        ['path-win', 'copy-path-win', null],
+        ['path-linux', 'copy-path-linux', null],
       ];
       const { protocol, host, pathname } = location;
       const plain = protocol === 'https:' && /^[a-z0-9.-]+(:[0-9]+)?$/i.test(host) && /^(\/[a-z0-9._~-]+)*\/(index\.html)?$/i.test(pathname);
@@ -377,44 +577,33 @@
           }, () => {});
         });
       }
-      // What's for this browser and system is shown, across: its own card, and in Chrome the zip for
-      // any computer. The cards for others go into a closed section below. By the user agent, which
-      // is enough for that: nothing is taken off the page. On a phone or tablet, or a system without
-      // a card of its own, everything stays as it is.
+      // The visitor's own browser and computer, picked for them by the user agent, which is enough
+      // for that: the others are a click away. On a phone or tablet, or an unknown system, the pick
+      // stays as it is in the page.
       const agent = navigator.userAgent;
-      const own = /Android|iPhone|iPad|Mobile|CrOS/.test(agent) ? null
-        : /\bFirefox\//.test(agent) ? 'firefox' : /\bWindows\b/.test(agent) ? 'windows' : /\b(Macintosh|Linux)\b/.test(agent) ? 'mac' : null;
-      const first = own && document.getElementById(own);
-      if (first) {
-        const ways = first.parentNode;
-        const shown = own === 'firefox' ? [first] : [first, document.getElementById('update')];
-        const others = [...ways.children].filter(card => !shown.includes(card));
-        for (const card of ways.children) card.classList.toggle('wide', shown.includes(card));
-        if (others.length % 2) others.at(-1).classList.add('wide');
-        const more = document.createElement('details');
-        more.className = 'more wide';
-        const summary = document.createElement('summary');
-        summary.textContent = 'Other browsers and systems';
-        const list = document.createElement('div');
-        list.className = 'ways';
-        list.append(...others);
-        more.append(summary, list);
-        ways.prepend(first);
-        ways.append(more);
-        // In Firefox there's no step 2: it goes with Chrome's cards, and the line that says Read Free
-        // is installed (the extension writes it) stays with Firefox's
-        if (own === 'firefox') {
-          more.append(document.getElementById('load').closest('section'));
-          first.append(document.getElementById('installed'));
-          document.getElementById('chrome-step').hidden = true;
-          document.querySelector('#get .number').hidden = true;
-        }
-      }
-      // A link to a card in that section opens it
+      const pick = id => {
+        const radio = id && document.getElementById(id);
+        if (radio?.type !== 'radio') return false;
+        radio.checked = true;
+        return true;
+      };
+      const phone = /Android|iPhone|iPad|Mobile/.test(agent);
+      const computer = phone ? null : ['CrOS', 'Windows', 'Macintosh', 'Linux'].find(name => agent.includes(name));
+      const own = { CrOS: 'chromebook', Windows: 'windows', Macintosh: 'mac', Linux: 'linux' }[computer];
+      // Not over what they picked before, which the browser brings back on Back
+      if (document.querySelector('input[name="system"]:checked')?.defaultChecked
+        && !(own && /\bFirefox\//.test(agent) && pick('firefox'))) pick(own);
+      document.getElementById('safari').hidden = own !== 'mac' || !/\bSafari\//.test(agent) || /\bChrom(e|ium)\//.test(agent);
+      // A link to a part of the page shows it: Chrome's steps in Firefox (the installers open #load),
+      // how to update (the extension links to #update), a browser and computer (#windows)
       const reveal = () => {
-        const target = document.getElementById(location.hash.slice(1));
+        const id = location.hash.slice(1);
+        const target = id && document.getElementById(id);
         if (!target) return;
-        const more = target.closest('details');
+        pick(id);
+        const firefox = document.getElementById('firefox');
+        if (firefox?.checked && target.closest('[data-for~="mac"]')) pick(own || 'mac');
+        const more = target.closest('details') || (id === 'update' && target.querySelector('details'));
         if (more) more.open = true;
         target.scrollIntoView?.();
       };
